@@ -30,9 +30,8 @@ module MO(clk, reset, in_data, i, j, opcode, out_data, fin);
 	wire [9:0]	rA, rX, rB, next_rA, next_rX, next_rB;
 	wire [9:0]	m_n, m_r, next_m_n, next_m_r;
 	wire [9:0]	counter, next_counter;
-	wire 		idx_con, next_idx_con;
+	wire 		idx, next_idx;
 	wire [9:0]	X_col, next_X_col;
-	wire [9:0]	ra, rb, rx;
 	wire [19:0]	rP, next_rP;
 	
 	reg  [9:0] next_state1;
@@ -44,53 +43,53 @@ module MO(clk, reset, in_data, i, j, opcode, out_data, fin);
 	DFF #(10)	DFF4(clk, next_rA, rA);
 	DFF #(10)	DFF5(clk, next_rX, rX);
 	DFF #(10)	DFF6(clk, next_rB, rB);
-	DFF #(10)	DFF7(clk, next_m_n, m_n);
-	DFF #(10)	DFF8(clk, next_m_r, m_r);
-	DFF #(10)	DFF9(clk, next_counter, counter);
-	DFF #(1)	DFF10(clk, next_idx_con, idx_con);
-	DFF #(10)	DFF11(clk, next_X_col, X_col);
-	DFF #(3)	DFF12(clk, next_state, opcode);
-	DFF #(20)	DFF13(clk, next_rP, rP);
+	DFF #(20)	DFF7(clk, next_rP, rP);
+	DFF #(10)	DFF8(clk, next_m_n, m_n);
+	DFF #(10)	DFF9(clk, next_m_r, m_r);
+	DFF #(10)	DFF10(clk, next_counter, counter);
+	DFF #(1)	DFF11(clk, next_idx, idx);
+	DFF #(10)	DFF12(clk, next_X_col, X_col);
+	DFF #(3)	DFF13(clk, next_state, opcode);
 	
-	assign next_m_n = (state == `INIT)? 10'b0 : 
+	assign next_m_n	= (state == `INIT)? 10'b0 : 
 					  (state == `GET_N)? in_data : m_n;
 	assign next_m_r = (state == `INIT)? 10'b0 : 
 					  (state == `GET_R)? in_data : m_r;
-	assign next_rA = (state == `INIT)? 10'b0 : 
-					 (state == `WRITE_Y)? 10'b0 : 
-					 (state == `READ_A)? in_data : rA;
-	assign next_rX = (state == `INIT)? 10'b0 : 
-					 (state == `WRITE_Y)? 10'b0 :
-					 (state == `READ_X)? in_data : rX;
-	assign next_rB = (state == `INIT)? 10'b0 : 
-					 (state == `WRITE_Y)? 10'b0 :
-					 (state == `READ_B)? in_data : rB;
-	assign next_idx_con = (state == `INIT)? 1'b0 : 
-					  	  (state == `READ_A)? 1'b1 :
-						  (state == `READ_X)? 1'b0 : 
-						  (state == `WRITE_Y)? 1'b0 : idx_con;
+	assign next_rA	= (state == `INIT)? 10'b0 : 
+					  (state == `WRITE_Y)? 10'b0 : 
+					  (state == `READ_A)? in_data : rA;
+	assign next_rX	= (state == `INIT)? 10'b0 : 
+					  (state == `WRITE_Y)? 10'b0 :
+					  (state == `READ_X)? in_data : rX;
+	assign next_rB	= (state == `INIT)? 10'b0 : 
+					  (state == `WRITE_Y)? 10'b0 :
+					  (state == `READ_B)? in_data : rB;
+	assign next_rP	= (state == `INIT)? 20'b0 : 
+					  (state == `READ_X)? rA:
+					  (state == `WRITE_Y)? 20'b0 : rP;
+	assign next_idx	= (state == `INIT)? 1'b0 : 
+					  (state == `READ_A)? 1'b1 :
+					  (state == `READ_X)? 1'b0 : 
+					  (state == `WRITE_Y)? 1'b0 : idx;
 	assign next_counter = (state == `INIT)? 10'b0 : 
-						  (state == `WRITE_Y)? 10'b0 : 
-						  (state == `READ_A)? counter + 10'b1 :
-						  (state == `READ_X)? (counter == 2*m_r-1)? 10'b0 : 
-						  counter + 10'b1 : counter;
-	assign next_row = (state == `INIT)? 10'b0 : 
+					  (state == `WRITE_Y)? 10'b0 : 
+					  (state == `READ_A)? counter + 10'b1 :
+					  (state == `READ_X)? (counter == 2*m_r-1)? 10'b0 : 
+					  counter + 10'b1 : counter;
+	assign next_row	= (state == `INIT)? 10'b0 : 
 					  (state == `WRITE_Y)? (X_col == m_n-10'b1)? row + 10'b1 :
 					  row : row;
 	assign next_col = (state == `INIT)? 10'b0 : 
 					  (state == `READ_X)? col + 10'b1 : 
 					  (state == `WRITE_Y)? 10'b0 : col;
 	assign next_X_col = (state == `INIT)? 10'b0 : 
-					  	(state == `WRITE_Y)? (X_col == m_n-10'b1)? 10'b0 : 
-						X_col + 10'b1 : X_col;
+					  (state == `WRITE_Y)? (X_col == m_n-10'b1)? 10'b0 : 
+					  X_col + 10'b1 : X_col;
 	assign next_sum = (state == `INIT)? 20'b0 : 
 					  (state == `READ_A)? sum + rP*rX: 
 					  (state == `READ_B)? sum + rP*rX:
 					  (state == `WRITE_Y)? 20'b0 :
 					  sum;
-	assign next_rP = (state == `INIT)? 20'b0 : 
-					  (state == `READ_X)? rA:
-					  (state == `WRITE_Y)? 20'b0 : rP;
 	
 	always@(*)begin	// next_state
 		case(state)
@@ -106,10 +105,9 @@ module MO(clk, reset, in_data, i, j, opcode, out_data, fin);
 	end
 
 	assign next_state = (reset == 1'b0)? `INIT : next_state1;
-	//assign opcode = next_state;
 	assign fin = (state == `READ_A  && row == m_n)? 1'b1 : 1'b0;
-	assign i = (state == `READ_B)?row :(idx_con == 1'b0)? row : col;
-	assign j = (state == `READ_B)?X_col :(idx_con == 1'b0)? col : X_col;
-	assign out_data = sum+rB;//sum;
+	assign i = (state == `READ_B)?row :(idx == 1'b0)? row : col;
+	assign j = (state == `READ_B)?X_col :(idx == 1'b0)? col : X_col;
+	assign out_data = sum + rB;//sum;
 
 endmodule
