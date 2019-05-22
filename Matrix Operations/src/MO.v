@@ -24,7 +24,7 @@ module MO(clk, reset, in_data, i, j, opcode, out_data, fin);
 	output [9:0] i, j;
 	output [19:0] out_data;
 	
-	wire [2:0]	state, next_state;
+	wire [2:0]	state, next_state, next_opcode;
 	wire [19:0]	sum, next_sum;
 	wire [9:0]	row, next_row, col, next_col;
 	wire [9:0]	rA, rX, rB, next_rA, next_rX, next_rB;
@@ -49,7 +49,7 @@ module MO(clk, reset, in_data, i, j, opcode, out_data, fin);
 	DFF #(10)	DFF10(clk, next_counter, counter);
 	DFF #(1)	DFF11(clk, next_idx, idx);
 	DFF #(10)	DFF12(clk, next_X_col, X_col);
-	DFF #(3)	DFF13(clk, next_state, opcode);
+	DFF #(3)	DFF13(clk, next_opcode, opcode);
 	
 	assign next_m_n	= (state == `INIT)? 10'b0 : 
 					  (state == `GET_N)? in_data : m_n;
@@ -104,6 +104,7 @@ module MO(clk, reset, in_data, i, j, opcode, out_data, fin);
 		endcase
 	end
 
+	assign next_opcode = (reset == 1'b0)? `GET_N : next_state1;
 	assign next_state = (reset == 1'b0)? `INIT : next_state1;
 	assign fin = (state == `READ_A  && row == m_n)? 1'b1 : 1'b0;
 	assign i = (state == `READ_B)?row :(idx == 1'b0)? row : col;
