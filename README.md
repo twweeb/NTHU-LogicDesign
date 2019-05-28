@@ -8,6 +8,8 @@
 * [Lab3 Pattern Detector](https://github.com/twweeb/NTHU-LogicDesign/tree/master/Pattern%20Detector)
 
 * [Lab4 Matrix Operation](https://github.com/twweeb/NTHU-LogicDesign/tree/master/Matrix%20Operations)
+
+* [Lab5 Stack Machine](https://github.com/twweeb/NTHU-LogicDesign/tree/master/Stack%20Machine)
  
 ## LAB review
 * [Lab1 Review](https://hackmd.io/s/B1agh8cIN)
@@ -16,6 +18,7 @@
 
 * [Lab3 Review](https://hackmd.io/s/B1t8rJssE)
 
+* [Lab4 Review](https://hackmd.io/s/S17S36fT4)
 
 ## Tools
 * [如何進入工作站 - Windows版](https://hackmd.io/s/HJYRdltHE)
