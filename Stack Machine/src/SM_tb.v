@@ -21,7 +21,7 @@ module SM_tb;
 	wire [2:0]err_code;
 
 	// memeory and answer
-	reg [35:0]MEM[0:1023];
+	reg [35:0]MEM[0:1024];
 
 	// regs
 	reg [35:0]data;
@@ -126,12 +126,11 @@ module SM_tb;
 		$display(" ");
 
 		//MEM[1023] = (36 bits) = (13 bits instr) + (23 bits result)
-		if(correct == 1'b1 && result == MEM[1023][22:0])begin
+		if(correct == 1'b1 && result == MEM[1024][22:0])begin
 			$display("!!!!! ACCEPTED !!!!!");
 		end
 		else begin
-			//$display("%d %d", result, MEM[1023][22:0]);
-			//$display("WRONG ANSWER QAQ , wrong_flag = %d" , wrong_flag);
+			$display("WRONG ANSWER QAQ");
 		end
 		$display(" ");
 		$finish;
