@@ -11,6 +11,8 @@ SRC_syn	=SM_syn.v\
 
 SDF		=+define+SDF
 
+BON     =+define+BON
+
 TMPFILE	=*.log\
 		 INCA_libs
 
@@ -20,9 +22,13 @@ VLOGARG =+access+r
 
 all :: sim
 sim:
-	$(VLOG) $(HEAD) $(SRC) $(TEST1) $(VLOGARG)
+	$(VLOG) $(HEAD) $(SRC) $(VLOGARG)
 syn:
 	$(VLOG) $(HEAD) $(SRC_syn) $(SDF) $(VLOGARG)
+bon:
+	$(VLOG) $(HEAD) $(SRC) $(BON) $(VLOGARG)
+bon_syn:
+	$(VLOG) $(HEAD) $(SRC_syn) $(BON) $(SDF) $(VLOGARG)
 check:
 	$(VLOG) -c $(SRC)
 clean:

@@ -1,6 +1,7 @@
 `define SDFFILE "./SM.sdf"
 `define TIMEOUT 1000000
 `define MEM "./info.dat"
+`define MEM_bon "./info_bon.dat"
 `define PUSH 3'b000
 `define ADD 3'b001
 `define SUB 3'b010
@@ -28,7 +29,6 @@ module SM_tb;
 	reg [10:0]maxSize;
 	reg [9:0]result;
 	reg correct;
-	reg miss;
 
 	SM SM_0(.clk(clk),
 			.rst_n(rst_n),
@@ -53,6 +53,18 @@ module SM_tb;
 	end
 
 	initial begin
+		`ifdef BON
+			$readmemb (`MEM_bon, MEM);
+		`else
+			$readmemb (`MEM, MEM);
+		`endif
+	end
+
+	initial begin
+
+	end
+
+	initial begin
 		$display(" ");
 
 		// init values
@@ -63,9 +75,7 @@ module SM_tb;
 		correct = 1'b1;
 		maxSize = 11'd1024;
 		result = 10'd0;
-		miss = 1'b0;
 
-		$readmemb (`MEM, MEM);
 
 		// init MO
 		@(negedge clk)  rst_n = 1'b0;
@@ -82,19 +92,15 @@ module SM_tb;
 				#(cyc/2);
 
 				if(instr[12:10] === `ADD || instr[12:10] === `SUB || instr[12:10] === `MUL) begin
-					//d_valid
-					miss = 1'b1;
 					if(d_valid === 1'b1 && out_data === data[19:0] && err_code === data[22:20])begin
 						$display("GET ! pc = %d , your err_code = %d , answer err_code = %d" , pc , err_code , data[22:20]);
 						$display("      pc = %d , your out_data = %d , answer out_data = %d" , pc , $signed(out_data) ,$signed(data[19:0]));
 						result = result + 1'b1;
-						miss = 1'b0;
 					end
 					else if(d_valid === 1'b1 && (out_data !== data[19:0] || err_code !== data[22:20]))begin
 						$display("WA ! pc = %d , your err_code = %d , answer err_code = %d" , pc , err_code , data[22:20]);
 						$display("     pc = %d , your out_data = %d , answer out_data = %d" , pc , $signed(out_data) ,$signed(data[19:0]));
 						correct = 1'b0;
-						miss = 1'b0;
 					end
 				end
 				else if(instr[12:10] === `PUSH)begin
@@ -107,13 +113,16 @@ module SM_tb;
 						$display("GET ! pc = %d , your err_code = %d , answer err_code = %d" , pc , err_code , data[22:20]);
 						result = result + 1'b1;
 					end
-
-					if(miss == 1'b1)begin //forget to set d_valid = 1.
-						$display("Miss!");
+				end
+				else begin
+					if(err_code !== data[22:20] && d_valid)begin
+						$display("WA ! pc = %d , your err_code = %d , answer err_code = %d" , pc , err_code , data[22:20]);
 						correct = 1'b0;
-						miss = 1'b0;
 					end
-
+					else if(err_code === data[22:20] && d_valid)begin
+						$display("GET ! pc = %d , your err_code = %d , answer err_code = %d" , pc , err_code , data[22:20]);
+						result = result + 1'b1;
+					end
 				end
 			end else begin
 				data = 'hz;
@@ -126,10 +135,12 @@ module SM_tb;
 		$display(" ");
 
 		//MEM[1023] = (36 bits) = (13 bits instr) + (23 bits result)
-		if(correct == 1'b1 && result == MEM[1024][22:0])begin
-			$display("!!!!! ACCEPTED !!!!!");
+		if(correct == 1'b1 && result != MEM[1024][22:0])begin
+			$display("WRONG ANSWER!, Please Check Your d_vlid Signal");
 		end
-		else begin
+		else if (correct == 1'b1 && result == MEM[1024][22:0]) begin
+			$display("Correct Answer!!");
+		end else begin
 			$display("WRONG ANSWER QAQ");
 		end
 		$display(" ");
