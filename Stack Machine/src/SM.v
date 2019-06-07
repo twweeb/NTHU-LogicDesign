@@ -1,3 +1,13 @@
+`define PUSH 3'b000
+`define ADD 3'b001
+`define SUB 3'b010
+`define MUL 3'b011
+`define INIT 3'b000
+`define READ1 3'b001
+`define READ2 3'b010
+`define WRITE 3'b011
+`define FIN   3'b100
+
 `define NO_OP 2'b00
 `define DO_PUSH 2'b01
 `define DO_POP 2'b10
@@ -11,15 +21,6 @@
 `define STK7 4'b0111
 `define STK8 4'b1000
 `define FULL 4'b1000
-`define PUSH 3'b000
-`define ADD 3'b001
-`define SUB 3'b010
-`define MUL 3'b011
-`define INIT 3'b000
-`define READ1 3'b001
-`define READ2 3'b010
-`define WRITE 3'b011
-`define FIN   3'b100
 
 module DFF(clk, next, out);
 	parameter n = 1;
@@ -28,21 +29,6 @@ module DFF(clk, next, out);
 	output reg [n-1:0] out;
 	always@(posedge clk) begin
 		out = next;
-	end
-endmodule
-
-module DFF_R (clk, init_out, next_out, out, rst_n);
-	parameter n = 1;
-	input clk,rst_n;
-	input [n-1:0] next_out,init_out;
-	output reg [n-1:0] out;
-	always@(posedge clk, negedge rst_n) begin
-		if(rst_n==0)begin
-			out <= init_out;
-		end
-		else begin
-			out <= next_out;
-		end
 	end
 endmodule
 
@@ -67,18 +53,18 @@ module SM(clk, rst_n, instr, pc, d_valid, out_data, err_code, fin);
 	reg  [2:0] 	next_state1;
 	reg 		next_cnt1;
 	
-	assign next_pc = (state == `INIT)? 10'b0 : (state == `WRITE) ? pc + 1'b1 : pc;
+	assign next_pc = (rst_n == 0)? 10'd1023 : (state == `INIT)? 10'b0 : (state == `WRITE) ? pc + 1'b1 : pc;
     assign next_len = (rst_n == 0)? 4'b0 : (state == `INIT)? instr[9:0] : len;
     assign next_cnt = (rst_n == 0) ? 0 : next_cnt1;
     assign next_data = (rst_n == 0) ? 20'b0 : (state == `READ1) ? r_data[19:0] : data;
     assign next_data2 = (rst_n == 0) ? 20'b0 : (state == `READ2) ? r_data[19:0] : data2;
-    assign next_state = next_state1;
+    assign next_state = (rst_n == 0) ? `INIT : next_state1;
     assign w_data = (state == `WRITE) ? (cnt == 0) ? {{10{instr[9]}},instr[9:0]} : 
     									(oper == `ADD) ? (data + data2) :
     									(oper == `SUB) ? (data - data2) :
     									(oper == `MUL) ? (data * data2) : 20'b0 : 20'b0;
     assign d_valid =  (state == `WRITE && cnt == 1) ? 1 : 0;
-    assign err_code =  3'b0;// : 0;
+    assign err_code =  3'b0;
     assign fin = (pc == len)? 1 : 0;
     assign oper = instr[12:10];
     assign out_data = (state == `WRITE) ? w_data : 20'b0;
@@ -119,12 +105,12 @@ module SM(clk, rst_n, instr, pc, d_valid, out_data, err_code, fin);
 	    endcase
     end
 	
-	DFF_R #(10) DFF1(clk, 10'd1023, next_pc, pc, rst_n);
-	DFF_R #(3) DFF6(clk, `INIT, next_state, state,rst_n);
-	DFF #(10) DFF2(clk, next_len, len);
-	DFF #(1)  DFF3(clk, next_cnt, cnt);
-	DFF #(20) DFF4(clk, next_data, data);
-	DFF #(20) DFF5(clk, next_data2, data2);
+	DFF #(10)	DFF1(clk, next_pc, pc);
+	DFF #(10)	DFF2(clk, next_len, len);
+	DFF #(1)	DFF3(clk, next_cnt, cnt);
+	DFF #(20)	DFF4(clk, next_data, data);
+	DFF #(20)	DFF5(clk, next_data2, data2);
+	DFF #(3)	DFF6(clk, next_state, state);
 	
 	SM_Mem SM(clk, rst_n, cntrl, w_data, r_data, full, empty);
 endmodule
@@ -141,7 +127,7 @@ module SM_Mem(clk, rst_n, cntrl, w_data, r_data, full, empty);
 	wire [19:0]	next_num1,next_num2,next_num3,next_num4,next_num5,next_num6,next_num7,next_num8;
 	wire [19:0]	num1,num2,num3,num4,num5,num6,num7,num8;
 	wire [3:0]	top,next_top;
-	reg [19:0]	pop_data;
+	reg  [19:0]	pop_data;
 	
 	assign next_top = (rst_n == 1'b0) ? 4'b0 :
 					  (cntrl == `DO_PUSH) ? ((top == `FULL) ? top : top + 1'b1) :
@@ -174,5 +160,5 @@ module SM_Mem(clk, rst_n, cntrl, w_data, r_data, full, empty);
 	DFF #(20) DFF6(clk, next_num6, num6);
 	DFF #(20) DFF7(clk, next_num7, num7);
 	DFF #(20) DFF8(clk, next_num8, num8);
-	DFF #(4) DFF9(clk, next_top, top);
+	DFF #(4)  DFF9(clk, next_top, top);
 endmodule
