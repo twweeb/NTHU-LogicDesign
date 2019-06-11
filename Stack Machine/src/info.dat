@@ -7,6 +7,12 @@
 010000000000000000000000000000000010 // sub
 000000000000000000000000000000000000 // push 0
 010000000000000011111111111111111110 // sub
+000111111111000000000000000000000000 // push -2
+000111111111000000000000000000000000 // push -2
+001000000000000011111111111111111100 // add
+011000000000000000000000000000001000 // mul
+000111111111000000000000000000000000 // push -2
+011000000000000011111111111111110000 // mul
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -1015,11 +1021,5 @@ xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-000000000100100000000000000000001001 // 9  9
-000000000010000000000000000000000100 // 4  4
+000000000111100000000000000000001111 // 15  15
+000000000011100000000000000000000111 // 7  7
