@@ -43,11 +43,11 @@ module SM(clk, rst_n, instr, pc, d_valid, out_data, err_code, fin);
 	output [2:0] err_code;
 	output fin;
 	
-	wire 		cnt,next_cnt, restore, next_restore, full, empty;
+	wire 		cnt,next_cnt, restore, next_restore, full, empty, invalid, next_invalid;
 	wire [2:0]	oper,state, next_state;
 	wire [9:0]	next_pc, next_len, len;
 	wire [19:0]	data,data2, next_data, next_data2, r_data, w_data;
-	reg 		next_cnt1, next_restore1;
+	reg 		next_cnt1, next_restore1, next_invalid1;
 	reg  [1:0]	cntrl;
 	reg  [2:0] 	next_state1;
 	
@@ -57,9 +57,10 @@ module SM(clk, rst_n, instr, pc, d_valid, out_data, err_code, fin);
 	assign next_data2 = (rst_n == 0) ? 20'b0 : (state == `READ2) ? r_data[19:0] : data2;
 	assign next_state = (rst_n == 0) ? `INIT : next_state1;
 	assign next_restore = (rst_n == 0) ? 0 : next_restore1;
+	assign next_invalid = (rst_n == 0) ? 0 : next_invalid1;
 	assign next_cnt = (rst_n == 0) ? 0 : next_cnt1;
 	assign d_valid =  (state == `WRITE && cnt == 1) ? 1 : (state == `ERR || state == `UND) ? 1 : 0;
-	assign err_code =  (restore == 1) ? 3'b100 : (state == `ERR) ? 3'b001 : (state == `UND) ? 3'b010 : 3'b0;
+	assign err_code =  (invalid == 1) ? 3'b100 : (state == `ERR) ? 3'b001 : (state == `UND) ? 3'b010 : 3'b0;
 	assign fin = (pc == len)? 1 : 0;
 	assign oper = instr[12:10];
 	assign out_data = (restore == 1) ? 20'b0 : (state == `WRITE) ? w_data : 20'b0;
@@ -72,42 +73,49 @@ module SM(clk, rst_n, instr, pc, d_valid, out_data, err_code, fin);
 	    		cntrl = `NO_OP;
 	    		next_cnt1 = 0;
 	    		next_restore1 = 0;
+	    		next_invalid1 = 0;
 	    	end
 
 	    	`READ1: begin
 	    		cntrl = `DO_POP;
 	    		next_cnt1 = 1;
-	    		next_restore1 =  0;
+	    		next_restore1 = 0;
+	    		next_invalid1 = (empty == 1) ? 1 : 0;
 	    	end
 
 	    	`READ2: begin
 	    		cntrl = (empty == 1) ? `NO_OP : `DO_POP;
 	    		next_cnt1 = 1;
 	    		next_restore1 = (empty == 1) ? 1 : 0;
+	    		next_invalid1 = (empty == 1) ? 1 : 0;
 	    	end
 
 	    	`WRITE: begin
 	    		cntrl = `DO_PUSH;
 	    		next_cnt1 = 0;
 	    		next_restore1 = 0;
+	    		next_invalid1 = 0;
 	    	end
 
 	    	`FIN: begin
 	    		cntrl = `NO_OP;
 	    		next_cnt1 = 0;
 	    		next_restore1 = 0;
+	    		next_invalid1 = 0;
 	    	end
 
 	    	`ERR: begin
 	    		cntrl = `NO_OP;
 	    		next_cnt1 = 0;
 	    		next_restore1 = restore;
+	    		next_invalid1 = invalid;
 	    	end
 
 	    	`UND: begin
 	    		cntrl = `NO_OP;
 	    		next_cnt1 = 0;
 	    		next_restore1 = 0;
+	    		next_invalid1 = 0;
 	    	end
 	    	default:begin
 	    	end
@@ -116,7 +124,7 @@ module SM(clk, rst_n, instr, pc, d_valid, out_data, err_code, fin);
 	
     always@(*) begin
 	    case(state)
-	    	`INIT: next_state1 = (oper == `PUSH) ? `WRITE : (oper == `ADD || oper == `SUB || oper == `MUL) ? `READ1 : `UND;
+	    	`INIT: next_state1 = `FIN;
 	    	`READ1: next_state1 = (empty == 1) ? `ERR : `READ2;
 	    	`READ2: next_state1 = (empty == 1) ? `ERR : `WRITE;
 	    	`WRITE: next_state1 = `FIN;
@@ -131,9 +139,10 @@ module SM(clk, rst_n, instr, pc, d_valid, out_data, err_code, fin);
 	DFF #(10)	DFF2(clk, next_len, len);
 	DFF #(1)	DFF3(clk, next_cnt, cnt);
 	DFF #(1)	DFF4(clk, next_restore, restore);
-	DFF #(20)	DFF5(clk, next_data, data);
-	DFF #(20)	DFF6(clk, next_data2, data2);
-	DFF #(3)	DFF7(clk, next_state, state);
+	DFF #(1)	DFF5(clk, next_invalid, invalid);
+	DFF #(20)	DFF6(clk, next_data, data);
+	DFF #(20)	DFF7(clk, next_data2, data2);
+	DFF #(3)	DFF8(clk, next_state, state);
 	
 	SM_Mem SM(clk, rst_n, cntrl, w_data, r_data, full, empty);
 endmodule
@@ -147,16 +156,16 @@ module SM_Mem(clk, rst_n, cntrl, w_data, r_data, full, empty);
 	output full;
 	output empty;
 	
-	wire [19:0]	next_num1,next_num2,next_num3,next_num4,next_num5,next_num6,next_num7,next_num8;
-	wire [19:0]	num1,num2,num3,num4,num5,num6,num7,num8;
 	wire [3:0]	top,next_top;
+	wire [19:0]	next_num1,next_num2,next_num3,next_num4,next_num5,next_num6,next_num7,next_num8,
+	            num1,num2,num3,num4,num5,num6,num7,num8;
 	reg  [19:0]	pop_data;
 	
-	assign next_top = (rst_n == 1'b0) ? 4'b0 :
-					  (cntrl == `DO_PUSH) ? ((top == `STK8) ? top : top + 1'b1) :
-					  (cntrl == `DO_POP) ? ((top == `STK0) ? top : top - 1'b1) : top;
-	assign full = (top == `STK8) ? 1'b1 : 1'b0;
-	assign empty = (top == `STK0) ? 1'b1 : 1'b0;
+	assign next_top = (rst_n == 0) ? `STK0 :
+	                  (cntrl == `DO_PUSH) ? ((top == `STK8) ? top : top + 1'b1) :
+	                  (cntrl == `DO_POP) ? ((top == `STK0) ? top : top - 1'b1) : top;
+	assign full = (rst_n == 0) ? 0 : (top == `STK8) ? 1 : 0;
+	assign empty = (rst_n == 0) ? 1 : (top == `STK0) ? 1 : 0;
 	assign next_num1 = (top == `STK0 && cntrl == `DO_PUSH) ? w_data : num1;
 	assign next_num2 = (top == `STK1 && cntrl == `DO_PUSH) ? w_data : num2;
 	assign next_num3 = (top == `STK2 && cntrl == `DO_PUSH) ? w_data : num3;
