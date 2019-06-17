@@ -30,7 +30,7 @@ module Final(clk, rst_n, in_data, i, j, opcode, out_data, fin);
 	wire [19:0] row, next_row, col, next_col;
 	wire [19:0] rA, rY, rX, wX_col, next_rA, next_rY, next_rX, next_wX_col;
 	wire [19:0] counter, next_counter;
-	wire [19:0]	Psum, next_Psum;
+	wire [19:0] Psum, next_Psum;
 
 	reg [2:0] next_state1;
 
