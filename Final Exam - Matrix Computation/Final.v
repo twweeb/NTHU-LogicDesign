@@ -34,7 +34,7 @@ module Final(clk, rst_n, in_data, i, j, opcode, out_data, fin);
 
 	reg [2:0] next_state1;
 
-	DFF	#(3)	DFF0(clk, next_state, state);
+	DFF #(3)	DFF0(clk, next_state, state);
 	DFF #(20)	DFF1(clk, next_sum, sum);
 	DFF #(20)	DFF2(clk, next_row, row);
 	DFF #(20)	DFF3(clk, next_col, col);
@@ -50,40 +50,40 @@ module Final(clk, rst_n, in_data, i, j, opcode, out_data, fin);
 	DFF #(20)	DFF13(clk, next_fin_cnt, fin_cnt);
 
 	assign next_n	= (state == `INIT)? 20'b0 : 
-					  (state == `GET_N)? in_data : n;
+	                  (state == `GET_N)? in_data : n;
 	assign next_rA	= (state == `INIT)? 20'b0 : 
-					  (state == `WRITE_X)? 20'b0 : 
-					  (state == `READ_A)? in_data : rA;
+	                  (state == `WRITE_X)? 20'b0 : 
+	                  (state == `READ_A)? in_data : rA;
 	assign next_rX	= (state == `INIT)? 20'b0 : 
-					  (state == `READ_Y)? 20'b0 : 
-					  (state == `READ_A)? 20'b0 : 
-					  (state == `READ_X)? (counter == 20'b0 || counter == 20'b1) ? 20'b0: in_data : rX;
+	                  (state == `READ_Y)? 20'b0 : 
+	                  (state == `READ_A)? 20'b0 : 
+	                  (state == `READ_X)? (counter == 20'b0 || counter == 20'b1) ? 20'b0: in_data : rX;
 	assign next_rY	= (state == `INIT)? 20'b0 : 
-					  (state == `WRITE_X)? 20'b0 :
-					  (state == `READ_Y)? in_data : rY;
+	                  (state == `WRITE_X)? 20'b0 :
+	                  (state == `READ_Y)? in_data : rY;
 	assign next_wX_col = (state == `INIT)? 20'b0 : 
-					  (state == `GET_N)? in_data - 20'b1 :
-					  (state == `WRITE_X)? wX_col - 20'b1 : wX_col;
+	                  (state == `GET_N)? in_data - 20'b1 :
+	                  (state == `WRITE_X)? wX_col - 20'b1 : wX_col;
 	assign next_counter = (state == `INIT)? 20'b0 : 
-					  (state == `READ_Y)? 20'b0 : 
-					  (state == `READ_A)? counter + 20'b1 :
-					  (state == `READ_X)? (counter == (n-wX_col))? 20'b0 : counter : counter;
+	                  (state == `READ_Y)? 20'b0 : 
+	                  (state == `READ_A)? counter + 20'b1 :
+	                  (state == `READ_X)? (counter == (n-wX_col))? 20'b0 : counter : counter;
 	assign next_row	= (state == `INIT)? 20'b0 : 
-					  (state == `GET_N)? in_data - 20'b1: 
-					  (state == `WRITE_X)? row - 20'b1: row;
+	                  (state == `GET_N)? in_data - 20'b1: 
+	                  (state == `WRITE_X)? row - 20'b1: row;
 	assign next_col	= (state == `INIT)? 20'b0 : 
-					  (state == `GET_N)? in_data-20'b1 : 
-					  (state == `READ_X)? col + 20'b1 : 
-					  (state == `WRITE_X)? wX_col - 20'b1 : col;
+	                  (state == `GET_N)? in_data-20'b1 : 
+	                  (state == `READ_X)? col + 20'b1 : 
+	                  (state == `WRITE_X)? wX_col - 20'b1 : col;
 	assign next_idx	= (state == `INIT)? 1'b0 : 
-					  (state == `READ_A)? 1'b1 :
-					  (state == `READ_X)? 1'b0 : 
-					  (state == `WRITE_X)? 1'b0 : idx;
+	                  (state == `READ_A)? 1'b1 :
+	                  (state == `READ_X)? 1'b0 : 
+	                  (state == `WRITE_X)? 1'b0 : idx;
 	assign next_sum	= (state == `INIT)? 20'b0 : 
-					  (state == `READ_Y)? in_data :
-					  (state == `READ_A)? sum - rX*rA: 
-					  (state == `READ_X)? sum:
-					  (state == `WRITE_X)? 20'b0 : sum;
+	                  (state == `READ_Y)? in_data :
+	                  (state == `READ_A)? sum - rX*rA: 
+	                  (state == `READ_X)? sum:
+	                  (state == `WRITE_X)? 20'b0 : sum;
 	assign next_Psum = (state == `INIT)? 20'b0 :(state == `READ_X) ? rX*rA : Psum;
 	assign next_fin_cnt = (state == `INIT)? 20'b0 :(state == `WRITE_X) ? fin_cnt + 20'b1 : fin_cnt;
 
