@@ -1,0 +1,19 @@
+ 
+****************************************
+Report : clocks
+Design : Final
+Version: K-2015.06-SP1
+Date   : Tue Jun 18 13:39:19 2019
+****************************************
+
+Attributes:
+    d - dont_touch_network
+    f - fix_hold
+    p - propagated_clock
+    G - generated_clock
+    g - lib_generated_clock
+
+Clock          Period   Waveform            Attrs     Sources
+--------------------------------------------------------------------------------
+CLK_0         100.000   {0 50}                        {clk}
+--------------------------------------------------------------------------------
