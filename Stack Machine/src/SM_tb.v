@@ -1,6 +1,8 @@
 `define SDFFILE "./SM.sdf"
 `define TIMEOUT 1000000
-`define MEM "./info.dat"
+`define MEM1 "./info0.dat"
+`define MEM2 "./info1.dat"
+`define MEM3 "./info2.dat"
 `define MEM_bon "./info_bon.dat"
 `define PUSH 3'b000
 `define ADD 3'b001
@@ -52,19 +54,17 @@ module SM_tb;
 		$fsdbDumpvars;
 	end
 
+
 	initial begin
-		`ifdef BON
-			$readmemb (`MEM_bon, MEM);
-		`else
-			$readmemb (`MEM, MEM);
+
+	end
+
+	initial begin
+		`ifdef TEST1 $readmemb (`MEM1, MEM);
+		`elsif TEST2 $readmemb (`MEM2, MEM);
+		`elsif BON $readmemb (`MEM_bon, MEM);
+		`else $readmemb (`MEM3, MEM);
 		`endif
-	end
-
-	initial begin
-
-	end
-
-	initial begin
 		$display(" ");
 
 		// init values
